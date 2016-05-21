@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -22,11 +23,10 @@ import java.util.List;
 @EnableAutoConfiguration
 public class Palindromic {
 
-
     private static final Logger Log = LoggerFactory.getLogger(Palindromic.class);
     private static final String QRY_SEP = "?";
     private static final String EQUALS = "=";
-    private static final String QRY_DELIM = "&";
+    private static final String ARG_DELIM = "&";
 
     @SuppressWarnings("unused")
     @RequestMapping(value = "/palindromes", method = RequestMethod.GET)
@@ -47,48 +47,37 @@ public class Palindromic {
             }
         }
 
-
-
         Log.info("Palindrones called with [Search={}, limit={}]", search, searchLimit);
-
         List<String> inventors = getInnovatorsFromPatentsNasa(search,searchLimit);
-        ArrayList<ResponseData> responses = new ArrayList<ResponseData>();
-        responses.add(new ResponseData("Thomas Edison", 1000000));
-        responses.add(new ResponseData("Nicola Tesla", 531441));
-        responses.add(new ResponseData("Graham Bell", 32768));
+        ArrayList<ResponseData> responses = new ArrayList<>();
+        PalindromeCounter palindromeCounter = new PalindromeCounter();
 
+        inventors.stream().forEach(inventor -> {
+            List<String> palindrome = palindromeCounter.findAllPalindrones(inventor);
+            responses.add(new ResponseData(inventor,palindrome.size()));
+        });
 
         return responses;
     }
 
-    List<String> getInnovatorsFromPatentsNasa(String query, int limit) {
+    private List<String> getInnovatorsFromPatentsNasa(String query, int limit) {
         final String rootUri = "https://api.nasa.gov/patents/content";
-
         //https://api.nasa.gov/patents/content?query=temperature&limit=5&api_key=DEMO_KEY
-
         RestTemplate restTemplate = new RestTemplate();
-
         StringBuilder fullUri = new StringBuilder(rootUri.length() + 255);
         fullUri.append(rootUri).append(QRY_SEP).append("query").append(EQUALS)
-            .append(query).append(QRY_DELIM).append("limit").append(EQUALS)
-            .append(limit).append(QRY_DELIM).append("api_key=DEMO_KEY");
+            .append(query).append(ARG_DELIM).append("limit").append(EQUALS)
+            .append(limit).append(ARG_DELIM).append("api_key=DEMO_KEY");
 
         String uri = fullUri.toString();
-
         Log.info("Calling with URI = {}", uri);
-
-        Patents patents = restTemplate.getForObject(fullUri.toString(),
+        Patents patents = restTemplate.getForObject(uri,
             Patents.class);
-
-        /*
-        String patentString = patents.toString();
-
-        HashMap<String,String> patentsMap = restTemplate.getForObject(fullUri.toString(),
-            HashMap.class);
-         */
-
-
-        return patents.getInventorsFirstLastNames();
+        if ( patents == null ){
+            return Collections.emptyList();
+        }else {
+            return patents.getInventorsFirstLastNames();
+        }
     }
 
 
