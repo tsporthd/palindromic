@@ -19,12 +19,22 @@ if you run with temperature with a size of 3 or electricity with a size of 5 it 
 It could take a good bit more work to try to come up with a more optimal algorithm than i have done thus far.
 
 
-1. Call to any remote webservice should be behind a circuit breaker and perhaps async with Actor or 
-   ExecutorService. Even using parallel streams algo not suitable for request/response
+1. Call to any remote webservice should be behind a circuit breaker.  I added parallelStreams but algo still even if
+   made parallel it is too slow for request response.
 2. I would assume some sort of error message in the response besides just http 
 3. Finding palindromes is slow could be improved
 4. There are few tests
 5. Error handling
 
+Number of patents to be considered
+1. default limit = 1
+2. max limit is 5
+
+
+To run
+http://http://localhost:8080/palindromes?search=electricity&limit=3
+
+NOTE:
+running with limit of 
    
    
