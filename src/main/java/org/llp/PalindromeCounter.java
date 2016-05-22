@@ -19,7 +19,7 @@ class PalindromeCounter {
 
     private static final Logger Log = LoggerFactory.getLogger(PalindromeCounter.class);
 
-    public static boolean isItPalindrom(char[] word){
+    private static boolean isItPalindrom(char[] word){
         int i1 = 0;
         int i2 = word.length - 1;
         while (i2 > i1) {
