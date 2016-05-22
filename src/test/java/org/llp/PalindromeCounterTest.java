@@ -3,8 +3,6 @@ package org.llp;
 
 import org.junit.Test;
 
-import java.util.List;
-
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -19,19 +17,19 @@ public class PalindromeCounterTest {
 
     @Test
     public void enumeratePalidrones() throws Exception {
-        List<String> palindrones = palindromeCounter.findAllPalindrones("Graham Bell");
-        assertNotNull(palindrones);
-        assertTrue(palindrones.size() == 32768);
+        PalindromeCounter.PalindromeCount counter = palindromeCounter.countAllPalindrones("Graham Bell");
+        assertNotNull(counter);
+        assertTrue(counter.getCount() == 32768);
 
 
-        palindrones = palindromeCounter.findAllPalindrones("Nicola Tesla");
-        assertNotNull(palindrones);
-        assertTrue(palindrones.size() == 531441);
+        counter = palindromeCounter.countAllPalindrones("Nicola Tesla");
+        assertNotNull(counter);
+        assertTrue(counter.getCount() == 531441);
 
 
-        palindrones = palindromeCounter.findAllPalindrones("Thomas Edison");
-        assertNotNull(palindrones);
-        assertTrue(palindrones.size() == 1_000_000);
+        counter = palindromeCounter.countAllPalindrones("Thomas Edison");
+        assertNotNull(counter);
+        assertTrue(counter.getCount() == 1_000_000);
 
 
     }

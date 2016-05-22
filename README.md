@@ -13,10 +13,14 @@ Now it can be run in one of 2 ways
 1.  mvn spring-boot:run
 2.  change to target directory and run java -jar  palindrome-0.0.1-SNAPSHOT.jar
 
-There are a number of changes if this were to ever go in prod
+There are a number of changes mainly the algorithm ie all palindromes even with parallelized can take
+a very very long time.  Since its basically a subset of all combinations of the characters of a given size
+if you run with temperature with a size of 3 or electricity with a size of 5 it will run and run.
+It could take a good bit more work to try to come up with a more optimal algorithm than i have done thus far.
+
 
 1. Call to any remote webservice should be behind a circuit breaker and perhaps async with Actor or 
-   ExecutorService
+   ExecutorService. Even using parallel streams algo not suitable for request/response
 2. I would assume some sort of error message in the response besides just http 
 3. Finding palindromes is slow could be improved
 4. There are few tests

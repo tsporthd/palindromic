@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
  */
 class PalindromeCounter {
 
-    private List<String> enumeratePalidrones(ArrayList<Character> charSet, int size) {
+    private PalindromeCount enumeratePalidrones(ArrayList<Character> charSet, int size) {
         Boolean odd = false;
         if ((size & 1) > 0) {/* odd */
             odd = true;
@@ -22,7 +22,7 @@ class PalindromeCounter {
         return findNPalindromes("", charSet, size, odd);
     }
 
-    private ArrayList<String> findNPalindromes(String string,
+    private PalindromeCount findNPalindromes(String string,
                                                List<Character> charSet,
                                                int size, Boolean odd) {
         if (string == null) {
@@ -30,12 +30,16 @@ class PalindromeCounter {
         }
 
         if (string.length() == size) {
-            ArrayList<String> currPalindrome = new ArrayList<>();
-            currPalindrome.add(string);
-            return currPalindrome;
+
+            //ArrayList<String> currPalindrome = new ArrayList<>();
+            //currPalindrome.add(string);
+
+            PalindromeCount palindromeCount = new PalindromeCount(1);
+            return palindromeCount;
         }
 
-        ArrayList<String> allPalindromeStrings = new ArrayList<>();
+        //ArrayList<String> allPalindromeStrings = new ArrayList<>();
+        PalindromeCount palindromeCount = new PalindromeCount();
         for (int i = 0; i < charSet.size(); i++) {
             String tempString;
             if (odd && string.isEmpty()) {
@@ -44,12 +48,13 @@ class PalindromeCounter {
                 tempString = charSet.get(i) + string + charSet.get(i);
             }
 
-            ArrayList<String> tempPalindromes = findNPalindromes(tempString, charSet, size, odd);
-            allPalindromeStrings.addAll(tempPalindromes);
+            PalindromeCount tempPalindromes = findNPalindromes(tempString, charSet, size, odd);
+            palindromeCount.addAllCount(tempPalindromes.getCount());
+            //allPalindromeStrings.addAll(tempPalindromes);
         }
 
 
-        return allPalindromeStrings;
+        return palindromeCount;
 
     }
 
@@ -77,12 +82,37 @@ class PalindromeCounter {
     }
 
 
-    List<String> findAllPalindrones(String input){
+    PalindromeCount countAllPalindrones(String input){
         String preprocessString = preProcessString(input);
         Set<Character> characters = createSetOfCharsFromString(input);
         ArrayList<Character> characterList = characters.stream().collect(Collectors.toCollection(ArrayList<Character>::new));
-
         return enumeratePalidrones(characterList,preprocessString.length());
+    }
+
+    ResponseData enumerateResults(String input){
+        return  new ResponseData(input,countAllPalindrones(input));
+    }
+
+
+    public class PalindromeCount{
+        Integer count = 0;
+
+        PalindromeCount(){
+        }
+
+        PalindromeCount(int count){
+            this.count = count;
+        }
+
+
+        void addAllCount(int inCount){
+            count += inCount;
+        }
+
+        public Integer getCount(){
+            return count;
+        }
+
 
     }
 

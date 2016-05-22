@@ -11,6 +11,7 @@ import org.springframework.web.client.RestTemplate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * ª
@@ -40,24 +41,28 @@ public class Palindromic {
 
         if (limit != null) {
             searchLimit = limit;
-            if ( (searchLimit > 5) || (searchLimit <= 0) ){
-                String msg = String.format("Search Limit must be > 0 and < 6. Search Limit of %d was passed",searchLimit);
+            if ((searchLimit > 5) || (searchLimit <= 0)) {
+                String msg = String.format("Search Limit must be > 0 and < 6. Search Limit of %d was passed", searchLimit);
                 Log.error(msg);
                 throw new InvalidArgumentException(msg);
             }
         }
 
         Log.info("Palindrones called with [Search={}, limit={}]", search, searchLimit);
-        List<String> inventors = getInnovatorsFromPatentsNasa(search,searchLimit);
-        ArrayList<ResponseData> responses = new ArrayList<>();
+        List<String> inventors = getInnovatorsFromPatentsNasa(search, searchLimit);
+
+        Log.info("There are [Inventors={}, List={}]",inventors.size(),inventors);
         PalindromeCounter palindromeCounter = new PalindromeCounter();
 
-        inventors.stream().forEach(inventor -> {
-            List<String> palindrome = palindromeCounter.findAllPalindrones(inventor);
-            responses.add(new ResponseData(inventor,palindrome.size()));
-        });
+        if (inventors != null && inventors.size() > 0) {
+            return inventors.parallelStream()
+                .map(palindromeCounter::enumerateResults)
+                .collect(Collectors.toCollection(ArrayList<ResponseData>::new));
+        } else {
+            return Collections.emptyList();
+        }
 
-        return responses;
+
     }
 
     private List<String> getInnovatorsFromPatentsNasa(String query, int limit) {
@@ -73,9 +78,9 @@ public class Palindromic {
         Log.info("Calling with URI = {}", uri);
         Patents patents = restTemplate.getForObject(uri,
             Patents.class);
-        if ( patents == null ){
+        if (patents == null) {
             return Collections.emptyList();
-        }else {
+        } else {
             return patents.getInventorsFirstLastNames();
         }
     }
@@ -86,8 +91,8 @@ public class Palindromic {
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    private class InvalidArgumentException extends IllegalStateException{
-        InvalidArgumentException(String message){
+    private class InvalidArgumentException extends IllegalStateException {
+        InvalidArgumentException(String message) {
             super(message);
         }
 
