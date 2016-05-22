@@ -1,5 +1,8 @@
 package org.llp;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -13,6 +16,21 @@ import java.util.stream.Collectors;
  * Time: 4:58 PM
  */
 class PalindromeCounter {
+
+    private static final Logger Log = LoggerFactory.getLogger(PalindromeCounter.class);
+
+    public static boolean isItPalindrom(char[] word){
+        int i1 = 0;
+        int i2 = word.length - 1;
+        while (i2 > i1) {
+            if (word[i1] != word[i2]) {
+                return false;
+            }
+            ++i1;
+            --i2;
+        }
+        return true;
+    }
 
     private PalindromeCount enumeratePalidrones(ArrayList<Character> charSet, int size) {
         Boolean odd = false;
@@ -31,11 +49,13 @@ class PalindromeCounter {
 
         if (string.length() == size) {
 
+            if ( !isItPalindrom(string.toCharArray())){
+                Log.error("[PalinString = {}, isItPalindrom = {}]", string, false);
+            }
+
             //ArrayList<String> currPalindrome = new ArrayList<>();
             //currPalindrome.add(string);
-
-            PalindromeCount palindromeCount = new PalindromeCount(1);
-            return palindromeCount;
+            return  new PalindromeCount(1);
         }
 
         //ArrayList<String> allPalindromeStrings = new ArrayList<>();
@@ -60,13 +80,11 @@ class PalindromeCounter {
 
     String preProcessString(String input){
         StringBuilder builder = new StringBuilder(input.length());
-
         for (char c : input.toCharArray()) {
             if ( !Character.isWhitespace(c)) {
                 builder.append(Character.toLowerCase(c));
             }
         }
-
         return builder.toString();
     }
 
@@ -90,11 +108,14 @@ class PalindromeCounter {
     }
 
     ResponseData enumerateResults(String input){
-        return  new ResponseData(input,countAllPalindrones(input));
+        ResponseData responseData = new ResponseData(input,countAllPalindrones(input));
+        Log.info("PalindromeCount for {ResponseData = {}}",responseData.toString());
+
+        return responseData;
     }
 
 
-    public class PalindromeCount{
+    class PalindromeCount{
         Integer count = 0;
 
         PalindromeCount(){
@@ -109,7 +130,7 @@ class PalindromeCounter {
             count += inCount;
         }
 
-        public Integer getCount(){
+        Integer getCount(){
             return count;
         }
 

@@ -34,4 +34,12 @@ public class ResponseData {
     public int getCount() {
         return count;
     }
+
+    @Override
+    public String toString() {
+        return "ResponseData{" +
+            "name='" + name + '\'' +
+            ", count=" + count +
+            '}';
+    }
 }
