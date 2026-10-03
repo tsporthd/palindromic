@@ -1,49 +1,54 @@
 # palindromic
 
-A small Spring Boot REST service that looks up NASA patents for a search term, pulls out the
+A small Spring Boot REST service that looks up NASA patents for a search term, finds the
 inventors' names, and reports how many palindromes can be built from each name's letters.
 
 ## What it does
 
 `GET /palindromes?search=<term>&limit=<n>`
 
-1. **Validates input** (`Palindromic.palindrones`)
+1. **Validates input** (`Palindromic`)
    - `search` is required.
    - `limit` is optional, defaults to `1`, and must be between `1` and `5`; anything else
      returns HTTP `400 Bad Request`.
-2. **Queries NASA's patent API** (`Palindromic.getInnovatorsFromPatentsNasa`)
-   - Calls `https://api.nasa.gov/patents/content?query=<search>&limit=<limit>&api_key=DEMO_KEY`
-     with Spring's `RestTemplate`.
-   - The JSON response is mapped onto `Patents` -> `Result` -> `Innovator` (plus `Contact` and
-     `Concepts`), POJOs generated with jsonschema2pojo.
-3. **Extracts inventor names** (`Patents.getInventorsFirstLastNames`)
-   - Every innovator on every returned patent becomes a `"<first> <last>"` string.
-4. **Counts palindromes per inventor** (`PalindromeCounter.enumerateResults`), in a parallel stream
+2. **Finds inventors** (`NasaPatentInventorClient.findInventorNames`). NASA's old patent API
+   (`api.nasa.gov/patents/content`) is gone and its replacement does not return inventor names,
+   so the list is built in three steps:
+   1. NASA Technology Transfer API - `https://technology.nasa.gov/api/api/patent/<term>` returns
+      NASA case ids (e.g. `MFS-TOPS-93`); the first `limit` cases are used.
+   2. NASA case page - `https://technology.nasa.gov/patent/<caseId>` lists the case's US patent
+      numbers.
+   3. Google Patents - `https://patents.google.com/patent/US<number>/en` lists each patent's
+      inventors.
+
+   Inventors are deduplicated across patents. Cases without a granted US patent contribute no
+   inventors.
+3. **Counts palindromes per inventor** (`PalindromeCounter.enumerateResults`)
    - The name is lower-cased and whitespace is removed, e.g. `"Graham Bell"` -> `"grahambell"`
      (length 10).
    - The distinct letters of the name form the alphabet, e.g. `{a, b, e, g, h, l, m, r}` (8 letters).
-   - The service counts every palindrome **of the same length as the name** that can be written
-     using that alphabet, with letters allowed to repeat. It builds them recursively from the
-     middle outwards (`findNPalindromes`) and adds up how many it finds.
-5. **Returns JSON**, one entry per inventor:
+   - The count is the number of palindromes **of the same length as the name** that can be
+     written using that alphabet, with letters allowed to repeat.
+4. **Returns JSON**, one entry per inventor:
 
    ```json
    [
-     { "name": "Graham Bell", "count": 32768 }
+     { "name": "Paul R. Gradl", "count": 262144 }
    ]
    ```
 
 ### What the count means
 
 A palindrome of length `n` is fully determined by its first `ceil(n/2)` characters, so the
-count is always:
+count is:
 
 ```
 count = k ^ ceil(n / 2)
 ```
 
 where `k` is the number of distinct letters in the name and `n` is the name's length with
-whitespace removed. The values in `PalindromeCounterTest` match this formula:
+whitespace removed. `PalindromeCounter` computes this directly as a `BigInteger`, so long names
+are instant and never overflow. The values in `PalindromeCounterTest`:
 
 | Name            | Pre-processed    | n  | k  | count                |
 |-----------------|------------------|----|----|----------------------|
@@ -51,34 +56,33 @@ whitespace removed. The values in `PalindromeCounterTest` match this formula:
 | `Nicola Tesla`  | `nicolatesla`    | 11 | 9  | 9^6  = 531,441       |
 | `Thomas Edison` | `thomasedison`   | 12 | 10 | 10^6 = 1,000,000     |
 
-The code finds this number by generating every palindrome (exponential time), which is why long
-names can take a very long time to process. The formula above gives the same result instantly.
-
 ## Project layout
 
 | File | Purpose |
 |------|---------|
-| `src/main/java/org/llp/Palindromic.java` | Spring Boot entry point (`main`) and the `/palindromes` REST controller; calls NASA |
-| `src/main/java/org/llp/PalindromeCounter.java` | Name pre-processing and recursive palindrome counting |
+| `src/main/java/org/llp/Palindromic.java` | Spring Boot entry point (`main`) and the `/palindromes` REST controller |
+| `src/main/java/org/llp/NasaPatentInventorClient.java` | NASA search -> NASA case page -> Google Patents lookup |
+| `src/main/java/org/llp/PalindromeCounter.java` | Name pre-processing and palindrome counting |
 | `src/main/java/org/llp/ResponseData.java` | Response item: `name` and `count` |
-| `src/main/java/org/llp/Patents.java`, `Result.java`, `Innovator.java`, `Contact.java`, `Concepts.java` | Jackson models for the NASA patent API response |
 | `src/test/java/org/llp/PalindromeCounterTest.java` | Unit tests for counting and pre-processing |
+| `src/test/java/org/llp/NasaPatentInventorClientTest.java` | Lookup chain and HTML parsing tests (mocked HTTP) |
 
 ## Requirements
 
-- Java 1.8 (tested on 1.8_025)
-- Maven 3.2.3 or later
-- Spring Boot 1.3.5 (pulled in by `pom.xml`)
+- Java 17 or later (Gradle toolchain targets Java 17)
+- Nothing else - the Gradle wrapper (`./gradlew`, Gradle 9.8.0) downloads Gradle itself
 
 ## Build and run
 
+This is a Spring Boot 4.1.1 application.
+
 ```bash
-mvn clean install
+./gradlew build
 
 # either
-mvn spring-boot:run
+./gradlew bootRun
 # or
-java -jar target/palindrome-0.0.1-SNAPSHOT.jar
+java -jar build/libs/palindrome-0.0.1-SNAPSHOT.jar
 ```
 
 Then call:
@@ -89,18 +93,13 @@ http://localhost:8080/palindromes?search=electricity&limit=3
 
 ## Known limitations
 
-- **The NASA endpoint no longer works.** `https://api.nasa.gov/patents/content` now returns
-  HTTP 404, so `/palindromes` fails at the NASA call until it is moved to a current NASA
-  patent API. The API key is also hardcoded to `DEMO_KEY`.
-- **Slow counting.** Generating every palindrome is exponential in name length; even with
-  `parallelStream` across inventors, some searches (e.g. `temperature` with `limit=3`,
-  `electricity` with `limit=5`) can run for a very long time. The closed-form formula above
-  would fix this.
-- **Pre-processing only removes whitespace.** Punctuation in names (e.g. `"J. Smith"`) is kept
-  and counted as a letter.
-- **No circuit breaker or timeout** around the NASA call.
-- **Error responses** are bare HTTP status codes with no error body. Because `search` is a
-  required `@RequestParam`, Spring returns `400` when it is missing, so the custom
-  `MissingArgumentException` (`404`) is never reached.
-- **Few tests**: only `PalindromeCounter` is covered; nothing tests the controller or the NASA
-  integration.
+- **Google Patents is unofficial.** Steps 2 and 3 read HTML pages (no API key needed) and may
+  break if those pages change or if Google rate-limits requests. A page that fails to load is
+  logged and skipped. The official alternative, the USPTO Open Data Portal API, needs an API key.
+- **Sequential remote calls.** Each case and patent page is fetched one after another
+  (10s connect / 30s read timeout each), so larger `limit` values take several seconds.
+  There is no circuit breaker or caching.
+- **Pre-processing only removes whitespace.** Punctuation in names (e.g. `"Paul R. Gradl"`) is
+  kept and counted as a letter.
+- **Error responses** are Spring's default error bodies; there are no custom error messages.
+- **No controller tests**: tests cover `PalindromeCounter` and `NasaPatentInventorClient` only.
