@@ -6,7 +6,6 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestClient;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -25,9 +24,7 @@ import java.util.stream.Collectors;
 public class Palindromic {
 
     private static final Logger Log = LoggerFactory.getLogger(Palindromic.class);
-    private static final String QRY_SEP = "?";
-    private static final String EQUALS = "=";
-    private static final String ARG_DELIM = "&";
+    private final NasaPatentInventorClient nasaPatentInventorClient = new NasaPatentInventorClient();
 
     @SuppressWarnings("unused")
     @RequestMapping(value = "/palindromes", method = RequestMethod.GET)
@@ -49,7 +46,7 @@ public class Palindromic {
         }
 
         Log.info("Palindrones called with [Search={}, limit={}]", search, searchLimit);
-        List<String> inventors = getInnovatorsFromPatentsNasa(search, searchLimit);
+        List<String> inventors = nasaPatentInventorClient.findInventorNames(search, searchLimit);
 
         Log.info("There are [Inventors={}, List={}]",inventors.size(),inventors);
         PalindromeCounter palindromeCounter = new PalindromeCounter();
@@ -64,28 +61,6 @@ public class Palindromic {
 
 
     }
-
-    private List<String> getInnovatorsFromPatentsNasa(String query, int limit) {
-        final String rootUri = "https://api.nasa.gov/patents/content";
-        //https://api.nasa.gov/patents/content?query=temperature&limit=5&api_key=DEMO_KEY
-        StringBuilder fullUri = new StringBuilder(rootUri.length() + 255);
-        fullUri.append(rootUri).append(QRY_SEP).append("query").append(EQUALS)
-            .append(query).append(ARG_DELIM).append("limit").append(EQUALS)
-            .append(limit).append(ARG_DELIM).append("api_key=DEMO_KEY");
-
-        String uri = fullUri.toString();
-        Log.info("Calling with URI = {}", uri);
-        Patents patents = RestClient.create().get()
-            .uri(uri)
-            .retrieve()
-            .body(Patents.class);
-        if (patents == null) {
-            return Collections.emptyList();
-        } else {
-            return patents.getInventorsFirstLastNames();
-        }
-    }
-
 
     public static void main(String[] args) throws Exception {
         SpringApplication.run(Palindromic.class, args);

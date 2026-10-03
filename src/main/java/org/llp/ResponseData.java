@@ -1,5 +1,7 @@
 package org.llp;
 
+import java.math.BigInteger;
+
 /**
  *
  * User: lpresswood
@@ -8,7 +10,7 @@ package org.llp;
  */
 public class ResponseData {
     private final String name;
-    private final int count;
+    private final BigInteger count;
 
     public ResponseData(String name, PalindromeCounter.PalindromeCount palindromeCount){
         this.name = name;
@@ -16,12 +18,12 @@ public class ResponseData {
             count = palindromeCount.getCount();
         }
         else {
-            count = 0;
+            count = BigInteger.ZERO;
         }
     }
 
 
-    public ResponseData(String name, int count) {
+    public ResponseData(String name, BigInteger count) {
         this.name = name;
         this.count = count;
     }
@@ -31,7 +33,7 @@ public class ResponseData {
         return name;
     }
 
-    public int getCount() {
+    public BigInteger getCount() {
         return count;
     }
 

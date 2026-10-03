@@ -3,6 +3,9 @@ package org.llp;
 
 import org.junit.jupiter.api.Test;
 
+import java.math.BigInteger;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -19,17 +22,21 @@ public class PalindromeCounterTest {
     public void enumeratePalidrones() throws Exception {
         PalindromeCounter.PalindromeCount counter = palindromeCounter.countAllPalindrones("Graham Bell");
         assertNotNull(counter);
-        assertTrue(counter.getCount() == 32768);
+        assertEquals(BigInteger.valueOf(32768), counter.getCount());
 
 
         counter = palindromeCounter.countAllPalindrones("Nicola Tesla");
         assertNotNull(counter);
-        assertTrue(counter.getCount() == 531441);
+        assertEquals(BigInteger.valueOf(531441), counter.getCount());
 
 
         counter = palindromeCounter.countAllPalindrones("Thomas Edison");
         assertNotNull(counter);
-        assertTrue(counter.getCount() == 1_000_000);
+        assertEquals(BigInteger.valueOf(1_000_000), counter.getCount());
+
+
+        counter = palindromeCounter.countAllPalindrones("William C. C. Brandsmeier");
+        assertEquals(BigInteger.valueOf(13).pow(11), counter.getCount());
 
 
     }

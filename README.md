@@ -2,6 +2,20 @@
 Test Web Service which will allow us to pull palindrones back using Nasa Web Service
 for invetors
 
+## Data sources
+
+NASA's old patent API (`api.nasa.gov/patents/content`) is gone, and its replacement does not return
+inventor names, so `/palindromes?search=<term>&limit=<n>` now builds the inventor list in three steps:
+
+1. NASA Technology Transfer API - `https://technology.nasa.gov/api/api/patent/<term>` returns NASA case ids
+   (e.g. `MFS-TOPS-93`); the first `limit` cases are used.
+2. NASA case page - `https://technology.nasa.gov/patent/<caseId>` lists the case's US patent numbers.
+3. Google Patents - `https://patents.google.com/patent/US<number>/en` lists each patent's inventors.
+
+Steps 2 and 3 read HTML pages (no API key needed) and may break if those pages change. A failed page is
+logged and skipped. Each distinct inventor gets one `{name, count}` entry, where
+`count = (distinct letters) ^ ceil(name length / 2)`, returned as an exact big integer.
+
 This program requires
 
 1. Java 17 or later (Gradle toolchain targets Java 17)

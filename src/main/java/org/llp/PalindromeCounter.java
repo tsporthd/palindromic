@@ -3,8 +3,8 @@ package org.llp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
@@ -19,63 +19,9 @@ class PalindromeCounter {
 
     private static final Logger Log = LoggerFactory.getLogger(PalindromeCounter.class);
 
-    private static boolean isItPalindrom(char[] word){
-        int i1 = 0;
-        int i2 = word.length - 1;
-        while (i2 > i1) {
-            if (word[i1] != word[i2]) {
-                return false;
-            }
-            ++i1;
-            --i2;
-        }
-        return true;
-    }
-
+    /** A palindrome of length n is fixed by its first ceil(n/2) characters, so the count is k^ceil(n/2). */
     private PalindromeCount enumeratePalidrones(ArrayList<Character> charSet, int size) {
-        Boolean odd = false;
-        if ((size & 1) > 0) {/* odd */
-            odd = true;
-        }
-        return findNPalindromes("", charSet, size, odd);
-    }
-
-    private PalindromeCount findNPalindromes(String string,
-                                               List<Character> charSet,
-                                               int size, Boolean odd) {
-        if (string == null) {
-            return null;
-        }
-
-        if (string.length() == size) {
-
-            if ( !isItPalindrom(string.toCharArray())){
-                Log.error("[PalinString = {}, isItPalindrom = {}]", string, false);
-            }
-
-            //ArrayList<String> currPalindrome = new ArrayList<>();
-            //currPalindrome.add(string);
-            return  new PalindromeCount(1);
-        }
-
-        //ArrayList<String> allPalindromeStrings = new ArrayList<>();
-        PalindromeCount palindromeCount = new PalindromeCount();
-        for (int i = 0; i < charSet.size(); i++) {
-            String tempString;
-            if (odd && string.isEmpty()) {
-                tempString = string + charSet.get(i);
-            } else {
-                tempString = charSet.get(i) + string + charSet.get(i);
-            }
-
-            PalindromeCount tempPalindromes = findNPalindromes(tempString, charSet, size, odd);
-            palindromeCount.addAllCount(tempPalindromes.getCount());
-            //allPalindromeStrings.addAll(tempPalindromes);
-        }
-
-
-        return palindromeCount;
-
+        return new PalindromeCount(BigInteger.valueOf(charSet.size()).pow((size + 1) / 2));
     }
 
     String preProcessString(String input){
@@ -116,25 +62,15 @@ class PalindromeCounter {
 
 
     class PalindromeCount{
-        Integer count = 0;
+        private final BigInteger count;
 
-        PalindromeCount(){
-        }
-
-        PalindromeCount(int count){
+        PalindromeCount(BigInteger count){
             this.count = count;
         }
 
-
-        void addAllCount(int inCount){
-            count += inCount;
-        }
-
-        Integer getCount(){
+        BigInteger getCount(){
             return count;
         }
-
-
     }
 
 }
