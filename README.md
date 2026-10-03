@@ -4,14 +4,14 @@ for invetors
 
 This program requires
 
-1. java 1.8 - Tested on 1.8_025 
-2. maven 3.2.3 or greater version should work
+1. Java 17 or later (Gradle toolchain targets Java 17)
+2. Nothing else - the Gradle wrapper (`./gradlew`, Gradle 9.8.0) downloads Gradle itself
 
-This is a spring boot application so all you should neet to do is run mvn clean install
+This is a Spring Boot 4.1.1 application. Build it with `./gradlew build`.
 Now it can be run in one of 2 ways
 
-1.  mvn spring-boot:run
-2.  change to target directory and run java -jar  palindrome-0.0.1-SNAPSHOT.jar
+1.  ./gradlew bootRun
+2.  java -jar build/libs/palindrome-0.0.1-SNAPSHOT.jar
 
 There are a number of changes mainly the algorithm ie all palindromes even with parallelized can take
 a very very long time.  Since its basically a subset of all combinations of the characters of a given size
@@ -32,7 +32,7 @@ Number of patents to be considered
 
 
 To run
-http://http://localhost:8080/palindromes?search=electricity&limit=3
+http://localhost:8080/palindromes?search=electricity&limit=3
 
 NOTE:
 running with limit of 

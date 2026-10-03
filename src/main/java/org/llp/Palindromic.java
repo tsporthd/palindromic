@@ -6,7 +6,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -68,7 +68,6 @@ public class Palindromic {
     private List<String> getInnovatorsFromPatentsNasa(String query, int limit) {
         final String rootUri = "https://api.nasa.gov/patents/content";
         //https://api.nasa.gov/patents/content?query=temperature&limit=5&api_key=DEMO_KEY
-        RestTemplate restTemplate = new RestTemplate();
         StringBuilder fullUri = new StringBuilder(rootUri.length() + 255);
         fullUri.append(rootUri).append(QRY_SEP).append("query").append(EQUALS)
             .append(query).append(ARG_DELIM).append("limit").append(EQUALS)
@@ -76,8 +75,10 @@ public class Palindromic {
 
         String uri = fullUri.toString();
         Log.info("Calling with URI = {}", uri);
-        Patents patents = restTemplate.getForObject(uri,
-            Patents.class);
+        Patents patents = RestClient.create().get()
+            .uri(uri)
+            .retrieve()
+            .body(Patents.class);
         if (patents == null) {
             return Collections.emptyList();
         } else {
